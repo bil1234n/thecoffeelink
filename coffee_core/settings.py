@@ -1,4 +1,3 @@
-I have python(django) and postgresql coffee import and export system and host on free render web site but i want to use for my disk cloudinary
 import os
 from pathlib import Path
 import dj_database_url
