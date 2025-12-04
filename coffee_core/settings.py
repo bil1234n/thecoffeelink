@@ -100,46 +100,43 @@ else:
         }
     }
 
-# --- AUTHENTICATION ---
-AUTH_USER_MODEL = 'accounts.User'
-LOGIN_REDIRECT_URL = 'home'
-LOGOUT_REDIRECT_URL = 'home'
-ADMIN_SIGNUP_PASSCODE = "COFFEE_MASTER_2025"
 
-# =========================================================
-# 1. STATIC FILES (CSS/JS) - Served by WhiteNoise
-# =========================================================
+# Static & Media
 STATIC_URL = 'static/'
 
-# CRITICAL: This tells Django where to gather files during deployment
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# Use "Compressed" storage (Safer than Manifest for beginners)
+# ADD THIS PART!
+# This tells Django to look in the 'static' folder in your root directory
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# =========================================================
-# 2. MEDIA FILES (Images) - Served by Cloudinary
-# =========================================================
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Redirects
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+
+ADMIN_SIGNUP_PASSCODE = "COFFEE_MASTER_2025"
+
+# settings.py
+
 # 1. Configuration for CloudinaryField (The one causing the error)
 CLOUDINARY = {
-    'cloud_name': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    'api_key': os.environ.get('CLOUDINARY_API_KEY'),
-    'api_secret': os.environ.get('CLOUDINARY_API_SECRET'),
+    'cloud_name': 'dhfyolanv',
+    'api_key': '399471574245624',
+    'api_secret': 'kFY9tTVdDfUTLT9-oux8SMFuNGQ',
 }
 
 # 2. Configuration for Django File Storage (For general storage)
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+    'CLOUD_NAME': 'dhfyolanv',
+    'API_KEY': '399471574245624',
+    'API_SECRET': 'kFY9tTVdDfUTLT9-oux8SMFuNGQ',
 }
 
-# Tells Django to send uploaded images to Cloudinary
+# 3. Set the media storage
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
