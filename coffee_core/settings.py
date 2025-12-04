@@ -104,6 +104,8 @@ else:
 # Static & Media
 STATIC_URL = 'static/'
 
+# CRITICAL: This tells Django where to gather files during deployment
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # ADD THIS PART!
 # This tells Django to look in the 'static' folder in your root directory
 STATICFILES_DIRS = [
