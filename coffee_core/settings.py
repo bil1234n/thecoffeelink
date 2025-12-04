@@ -109,23 +109,22 @@ ADMIN_SIGNUP_PASSCODE = "COFFEE_MASTER_2025"
 # =========================================================
 # 1. STATIC FILES (CSS/JS) - Served by WhiteNoise
 # =========================================================
-STATIC_URL = '/static/'
+STATIC_URL = 'static/'
 
 # CRITICAL: This tells Django where to gather files during deployment
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Use "Compressed" storage (Safer than Manifest for beginners)
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-
-# Where your CSS/JS files live in your project folder
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
+    BASE_DIR / "static",
 ]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # =========================================================
 # 2. MEDIA FILES (Images) - Served by Cloudinary
 # =========================================================
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # 1. Configuration for CloudinaryField (The one causing the error)
 CLOUDINARY = {
@@ -136,7 +135,7 @@ CLOUDINARY = {
 
 # 2. Configuration for Django File Storage (For general storage)
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'dhfyolanv',
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
