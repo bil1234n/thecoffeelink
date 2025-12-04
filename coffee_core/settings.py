@@ -109,16 +109,18 @@ ADMIN_SIGNUP_PASSCODE = "COFFEE_MASTER_2025"
 # =========================================================
 # 1. STATIC FILES (CSS/JS) - Served by WhiteNoise
 # =========================================================
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
-# CRITICAL: This tells Django where to gather files during deployment
+# Folder where files are collected during deployment
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Use "Compressed" storage (Safer than Manifest for beginners)
+# Folder where you put your files during development
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    os.path.join(BASE_DIR, 'static'),
 ]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# WhiteNoise Configuration (Use Compressed, it is safer)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # =========================================================
 # 2. MEDIA FILES (Images) - Served by Cloudinary
