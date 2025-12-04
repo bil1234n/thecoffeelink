@@ -1,3 +1,4 @@
+I have python(django) and postgresql coffee import and export system and host on free render web site but i want to use for my disk cloudinary
 import os
 from pathlib import Path
 import dj_database_url
@@ -5,30 +6,33 @@ import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --- SECURITY ---
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-change-me')
+# --- SECURITY SETTINGS ---
+# Get SECRET_KEY from Environment or use fallback for local dev
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-change-this')
 
-# DEBUG: False on Render, True on your Local PC
+# DEBUG is True locally, but False on Render
 DEBUG = 'RENDER' not in os.environ
 
-ALLOWED_HOSTS = ['*'] # Required for Render
+# Allow Render to host the site
+ALLOWED_HOSTS = ['*']
 
-# CSRF Trust for Render
+# CSRF Trust for Render URLs
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 
 # --- INSTALLED APPS (Order is Critical) ---
 INSTALLED_APPS = [
-    'daphne',                     # 1. Websockets (Must be first)
-    
-    'cloudinary_storage',         # 2. Cloudinary Storage (Must be before staticfiles)
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles', # 3. Static Files
-    'cloudinary',                 # 4. Cloudinary Lib (Must be after staticfiles)
-    
+    'django.contrib.staticfiles',
+
+    # Add Cloudinary
+    'cloudinary',
+    'cloudinary_storage',
+
     # Custom Apps
     'accounts',
     'market',
@@ -39,7 +43,7 @@ INSTALLED_APPS = [
 # --- MIDDLEWARE ---
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # <--- Required for CSS on Render
+    'whitenoise.middleware.WhiteNoiseMiddleware', # <--- Critical for CSS
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -54,7 +58,7 @@ ROOT_URLCONF = 'coffee_core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'], 
+        'DIRS': [BASE_DIR / 'templates'], # Looks for HTML in 'coffee_project/templates'
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -62,27 +66,29 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'core.context_processors.user_notifications',
+                'core.context_processors.user_notifications', # Custom Notifications
             ],
         },
     },
 ]
 
+# --- WSGI / ASGI ---
 WSGI_APPLICATION = 'coffee_core.wsgi.application'
 ASGI_APPLICATION = 'coffee_core.asgi.application'
 
 # --- DATABASE (Auto-Switching) ---
-# Uses Neon on Render, Local Postgres on PC
+# If on Render (DATABASE_URL exists), use Neon.
+# If Local, use Local Postgres.
 DATABASES = {
     'default': dj_database_url.config(
-        # Replace with your local PC password for development
-        default='postgresql://postgres:yourpassword@localhost:5432/coffee_db',
+        # CHANGE THIS BELOW TO YOUR LOCAL PASSWORD IF RUNNING ON PC
+        default='postgresql://postgres:yourlocalpassword@localhost:5432/coffee_db',
         conn_max_age=600,
-        ssl_require='RENDER' in os.environ
+        ssl_require='RENDER' in os.environ # Only require SSL on Render
     )
 }
 
-# --- CHANNELS (Redis for Chat) ---
+# --- CHANNELS (REDIS for Chat) ---
 if 'REDIS_URL' in os.environ:
     CHANNEL_LAYERS = {
         "default": {
@@ -93,7 +99,7 @@ if 'REDIS_URL' in os.environ:
         },
     }
 else:
-    # Local Development Fallback
+    # Local Development Fallback (In-Memory)
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer"
@@ -103,45 +109,61 @@ else:
 # --- AUTHENTICATION ---
 AUTH_USER_MODEL = 'accounts.User'
 LOGIN_REDIRECT_URL = 'home'
-LOGOUT_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'landing_page'
+
+# Custom Settings
 ADMIN_SIGNUP_PASSCODE = "COFFEE_MASTER_2025"
+
+# --- PASSWORDS ---
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+# --- INTERNATIONALIZATION ---
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
 
 # =========================================================
 # 1. STATIC FILES (CSS/JS) - Served by WhiteNoise
 # =========================================================
-STATIC_URL = '/static/'
 
-# Folder where files are collected during deployment
+# --- STATIC FILES (CSS/JS) ---
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Folder where you put your files during development
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
-
-# WhiteNoise Configuration (Use Compressed, it is safer)
+# CHANGE THIS LINE: Use the "Safe" storage (removes 'Manifest')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# =========================================================
-# 2. MEDIA FILES (Images) - Served by Cloudinary
-# =========================================================
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Look for static files in 'coffee_project/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
-# 1. Configuration for CloudinaryField (The one causing the error)
+# ============================
+# CLOUDINARY MEDIA STORAGE
+# ============================
 CLOUDINARY = {
     'cloud_name': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'api_key': os.environ.get('CLOUDINARY_API_KEY'),
     'api_secret': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
-# 2. Configuration for Django File Storage (For general storage)
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
 
-# Tells Django to send uploaded images to Cloudinary
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+MEDIA_URL = '/media/'   # Not used on render but safe
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
