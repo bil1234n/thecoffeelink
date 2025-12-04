@@ -2,36 +2,44 @@ import os
 from pathlib import Path
 import dj_database_url
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-change-me-for-production'
-# Change these lines:
-DEBUG = 'RENDER' not in os.environ # False on Render, True on your PC
-ALLOWED_HOSTS = ['*'] # Allows Render to access your site
+# --- SECURITY ---
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-change-me')
 
-# INSTALLED_APPS: Order matters! 'daphne' must be before 'django.contrib.staticfiles'
+# DEBUG: False on Render, True on your Local PC
+DEBUG = 'RENDER' not in os.environ
+
+ALLOWED_HOSTS = ['*'] # Required for Render
+
+# CSRF Trust for Render
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
+
+# --- INSTALLED APPS (Order is Critical) ---
 INSTALLED_APPS = [
-    'daphne', # For Chat/WebSockets
+    'daphne',                     # 1. Websockets (Must be first)
+    
+    'cloudinary_storage',         # 2. Cloudinary Storage (Must be before staticfiles)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.staticfiles', # 3. Static Files
+    'cloudinary',                 # 4. Cloudinary Lib (Must be after staticfiles)
     
     # Custom Apps
     'accounts',
     'market',
     'chat',
     'core',
-    # Add these two:
-    'cloudinary_storage',
-    'cloudinary',
 ]
 
+# --- MIDDLEWARE ---
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # <--- Required for CSS on Render
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -42,10 +50,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'coffee_core.urls'
 
+# --- TEMPLATES ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'], # Global templates folder
+        'DIRS': [BASE_DIR / 'templates'], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -59,34 +68,21 @@ TEMPLATES = [
     },
 ]
 
-# Database Connection (PostgreSQL)
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'coffee_db',
-#         'USER': 'postgres',        # Default user
-#         'PASSWORD': 'Bilal1234', # <--- PUT YOUR POSTGRES PASSWORD HERE
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
-# Database (Auto-switches between Neon on Render and Local on PC)
+WSGI_APPLICATION = 'coffee_core.wsgi.application'
+ASGI_APPLICATION = 'coffee_core.asgi.application'
+
+# --- DATABASE (Auto-Switching) ---
+# Uses Neon on Render, Local Postgres on PC
 DATABASES = {
     'default': dj_database_url.config(
-        # Your local fallback (keep using your local postgres info here for development)
+        # Replace with your local PC password for development
         default='postgresql://postgres:yourpassword@localhost:5432/coffee_db',
         conn_max_age=600,
-        ssl_require=True 
+        ssl_require='RENDER' in os.environ
     )
 }
 
-
-# User Model
-AUTH_USER_MODEL = 'accounts.User'
-
-# Channel Layer (For Chat - Using In-Memory for Dev, use Redis for Prod)
-ASGI_APPLICATION = 'coffee_core.asgi.application'
-# Chat (Redis) Configuration
+# --- CHANNELS (Redis for Chat) ---
 if 'REDIS_URL' in os.environ:
     CHANNEL_LAYERS = {
         "default": {
@@ -97,49 +93,54 @@ if 'REDIS_URL' in os.environ:
         },
     }
 else:
-    # Local fallback
+    # Local Development Fallback
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer"
         }
     }
 
-# Static & Media
-STATIC_URL = 'static/'
-
-# ADD THIS PART!
-# This tells Django to look in the 'static' folder in your root directory
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Redirects
+# --- AUTHENTICATION ---
+AUTH_USER_MODEL = 'accounts.User'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
-
 ADMIN_SIGNUP_PASSCODE = "COFFEE_MASTER_2025"
 
-# settings.py
+# =========================================================
+# 1. STATIC FILES (CSS/JS) - Served by WhiteNoise
+# =========================================================
+STATIC_URL = '/static/'
+
+# CRITICAL: This tells Django where to gather files during deployment
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Use "Compressed" storage (Safer than Manifest for beginners)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# Where your CSS/JS files live in your project folder
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
+# =========================================================
+# 2. MEDIA FILES (Images) - Served by Cloudinary
+# =========================================================
+MEDIA_URL = '/media/'
 
 # 1. Configuration for CloudinaryField (The one causing the error)
 CLOUDINARY = {
-    'cloud_name': 'dhfyolanv',
-    'api_key': '399471574245624',
-    'api_secret': 'kFY9tTVdDfUTLT9-oux8SMFuNGQ',
+    'cloud_name': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'api_key': os.environ.get('CLOUDINARY_API_KEY'),
+    'api_secret': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
 # 2. Configuration for Django File Storage (For general storage)
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'dhfyolanv',
-    'API_KEY': '399471574245624',
-    'API_SECRET': 'kFY9tTVdDfUTLT9-oux8SMFuNGQ',
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
-# 3. Set the media storage
+# Tells Django to send uploaded images to Cloudinary
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
