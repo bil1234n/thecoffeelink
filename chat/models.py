@@ -17,7 +17,6 @@ class Message(models.Model):
     is_deleted_everyone = models.BooleanField(default=False)
     hidden_by = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='hidden_messages', blank=True)
     
-    # NEW FIELD TO TRACK EDITS
     updated_at = models.DateTimeField(auto_now=True) 
 
     def __str__(self):
