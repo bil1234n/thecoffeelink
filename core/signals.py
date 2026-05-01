@@ -7,11 +7,10 @@ from django.urls import reverse
 
 @receiver(post_save, sender=Order)
 def order_notification(sender, instance, created, **kwargs):
-    print(f"--- SIGNAL FIRED: Order #{instance.id} ---") # Debug Line 1
+    print(f"--- SIGNAL FIRED: Order #{instance.id} ---") 
     
     if created:
-        print("--- NEW ORDER DETECTED ---") # Debug Line 2
-        # 1. NEW ORDER -> Notify Seller
+        print("--- NEW ORDER DETECTED ---") 
         Notification.objects.create(
             recipient=instance.product.seller,
             sender=instance.buyer,
@@ -19,10 +18,9 @@ def order_notification(sender, instance, created, **kwargs):
             message=f"New Order: {instance.quantity}kg of {instance.product.name}",
             link=reverse('seller_orders')
         )
-        print(f"--- NOTIFICATION CREATED FOR SELLER: {instance.product.seller.username} ---") # Debug Line 3
+        print(f"--- NOTIFICATION CREATED FOR SELLER: {instance.product.seller.username} ---")
         
     else:
-        # 2. STATUS CHANGE -> Notify Buyer
         msg = None
         if instance.status == 'Accepted':
             msg = f"Order Accepted! The seller is preparing {instance.product.name}."
