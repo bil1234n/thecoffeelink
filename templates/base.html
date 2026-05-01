@@ -6,15 +6,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>TheCoffeeLink | Premium Export</title>
         
-        <!-- Google Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="{% static 'css/style.css' %}" rel="stylesheet">
 
-        <!-- INTERNAL STYLES FOR CHAT WIDGET -->
         <style>
-            /* Floating Button (Bottom Right) */
             .chat-btn-float {
                 position: fixed;
                 bottom: 5%;
@@ -40,7 +37,6 @@
                 background-color: #4E342E;
             }
 
-            /* Chat Container */
             .chat-widget-container {
                 position: fixed;
                 bottom: 100px;
@@ -57,13 +53,11 @@
                 border: 1px solid #e0e0e0;
             }
 
-            /* Show class for JS toggle */
             .chat-widget-container.active {
                 display: flex;
                 animation: fadeInUps 0.3s ease-in-out;
             }
 
-            /* Chat Header */
             .chat-header {
                 background-color: #2C1A11;
                 color: #fff;
@@ -87,7 +81,6 @@
                 cursor: pointer;
             }
 
-            /* Chat Body */
             .chat-body {
                 flex: 1;
                 padding: 15px;
@@ -102,7 +95,6 @@
                 margin-bottom: 15px;
             }
 
-            /* Chat Footer */
             .chat-footer {
                 padding: 10px;
                 border-top: 1px solid #eee;
@@ -148,12 +140,9 @@
     </head>
     <body>
 
-        <!-- 1. Sidebar -->
         {% include 'partials/header.html' %}
 
-        <!-- 2. Main Content Area -->
         <div class="main-content" id="main-content">           
-            <!-- Top Bar -->
             <header class="top-bar">
                 <div class="mobile-toggle" id="mobile-toggle">
                     <i class="fa-solid fa-bars"></i>
@@ -162,7 +151,6 @@
                 <div class="top-right-actions ms-auto">
                     
                     {% if user.is_authenticated %}
-                        <!-- NOTIFICATION BELL -->
                         <li class="nav-item dropdown me-3" style="list-style: none;">
                             <a class="nav-link position-relative" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown">
                                 <i class="fa-solid fa-bell fa-lg text-secondary"></i>
@@ -209,7 +197,6 @@
                     {% endif %}
                     {% if user.is_authenticated %}
                         
-                        <!-- CLICKABLE PROFILE LINK -->
                         <a href="{% url 'profile' %}" style="text-decoration: none; color: inherit; margin-right: 10px;">
                             <div class="user-profile">
                                 <div class="profile-img-placeholder">
@@ -219,7 +206,6 @@
                             </div>
                         </a>
 
-                        <!-- LOGOUT BUTTON -->
                         <form action="{% url 'logout' %}" method="post" class="d-inline">
                             {% csrf_token %}
                             <button type="submit" class="logout-btn" title="Logout">
@@ -228,17 +214,14 @@
                         </form>
 
                     {% else %}
-                        <!-- GUEST BUTTONS -->
                         <a href="{% url 'login' %}" class="btn btn-outline-dark btn-sm me-2">Login</a>
                         <a href="{% url 'register' %}" class="btn btn-primary btn-sm" style="background-color: #3e2723; border: none;">Sign Up</a>
                     {% endif %}
                 </div>
             </header>
 
-            <!-- Dynamic Content Wrapper -->
             <div class="content-wrapper">
                 
-                <!-- MESSAGES SECTION -->
                 {% if messages %}
                     <div class="container mt-3">
                         {% for message in messages %}
@@ -250,38 +233,27 @@
                     </div>
                 {% endif %}
 
-                <!-- *** CRITICAL FIX: THIS WAS MISSING *** -->
-                <!-- This allows other pages to inject their HTML here -->
                 {% block content %}
                 {% endblock %}
-                <!-- ************************************** -->
 
             </div>
 
-            <!-- Footer -->
             {% include 'partials/footer.html' %}
 
         </div>
 
-        <!-- ================= CHAT WIDGET ================= -->
-        
-        <!-- 1. The Floating Button -->
         <div class="chat-btn-float" id="chatToggleBtn">
             <i class="fa-solid fa-comments"></i>
         </div>
 
-        <!-- 2. The Chat Window -->
         <div class="chat-widget-container" id="chatWindow">
-            <!-- Header -->
             <div class="chat-header">
                 <h5 class="mb-0 fs-6"><i class="fa-solid fa-headset me-2"></i> AI Assistant</h5>
                 <button class="close-chat" id="closeChatBtn">&times;</button>
             </div>
 
-            <!-- Body: Under Development State -->
             <div class="chat-body d-flex flex-column align-items-center justify-content-center text-center">
                 
-                <!-- Animated/Styled Icon -->
                 <div class="position-relative mb-3 mt-2">
                     <div class="bg-light rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 80px; height: 80px;">
                         <i class="fa-solid fa-robot fa-2x" style="color: #2C1A11;"></i>
@@ -291,7 +263,6 @@
                     </span>
                 </div>
 
-                <!-- Professional Text -->
                 <h6 class="fw-bold mb-2" style="color: #2C1A11;">AI Agent Training</h6>
                 
                 <p class="small text-muted px-3 mb-4" style="line-height: 1.5;">
@@ -299,7 +270,6 @@
                     <span class="fst-italic text-secondary">Live Agent and instant support will be available in v2.0.</span>
                 </p>
 
-                <!-- Redirect to Real Human Chat -->
                 <div class="w-100 px-4">
                     <p class="small fw-bold mb-2 text-secondary">Need help right now?</p>
                     <a href="{% url 'contact_admin' %}" class="btn btn-outline-dark btn_sm w-100 py-2" style="border-color: #2C1A11; color: #2C1A11;">
@@ -308,7 +278,6 @@
                 </div>
             </div>
 
-            <!-- Footer: Disabled Input -->
             <div class="chat-footer bg-light">
                 <input type="text" class="form-control form-control-sm" placeholder="AI Chat is currently offline..." disabled style="background-color: #e9ecef;">
                 <button class="btn btn-sm btn-secondary" disabled><i class="fa-solid fa-paper-plane"></i></button>
@@ -316,53 +285,43 @@
 
         </div>
 
-        <!-- Scripts -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         
-        <!-- MAIN JAVASCRIPT LOGIC -->
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 
-                // --- Mobile Sidebar Logic ---
                 const mobileToggle = document.getElementById('mobile-toggle');
                 const sidebar = document.getElementById('sidebar');
                 
                 if(mobileToggle){
                     mobileToggle.addEventListener('click', (e) => {
-                        e.stopPropagation(); // Stop click from closing it immediately
+                        e.stopPropagation(); 
                         sidebar.classList.toggle('active');
                     });
                 }
 
-                // --- Chat Widget Logic ---
                 const chatBtn = document.getElementById('chatToggleBtn');
                 const chatWindow = document.getElementById('chatWindow');
                 const closeChat = document.getElementById('closeChatBtn');
 
                 if(chatBtn) {
-                    // 1. Open Chat
                     chatBtn.addEventListener('click', (e) => {
-                        e.stopPropagation(); // Stop bubbling
+                        e.stopPropagation(); 
                         chatWindow.classList.toggle('active');
                     });
 
-                    // 2. Close with X button
                     closeChat.addEventListener('click', () => {
                         chatWindow.classList.remove('active');
                     });
 
-                    // 3. Global Click Listener (Handles clicking outside)
                     document.addEventListener('click', (e) => {
-                        // Mobile Sidebar Close Logic
                         if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
                             if (!sidebar.contains(e.target) && !mobileToggle.contains(e.target)) {
                                 sidebar.classList.remove('active');
                             }
                         }
 
-                        // Chat Close Logic
                         if (chatWindow.classList.contains('active')) {
-                            // If click is NOT inside chat window AND NOT on the toggle button
                             if (!chatWindow.contains(e.target) && !chatBtn.contains(e.target)) {
                                 chatWindow.classList.remove('active');
                             }
