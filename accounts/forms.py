@@ -32,7 +32,6 @@ class SellerRegisterForm(UserCreationForm):
         user.is_verified = False
         if commit:
             user.save()
-            # Create the document record using NEW fields
             VerificationDoc.objects.create(
                 user=user,
                 business_license=self.cleaned_data['business_license'],
@@ -50,7 +49,6 @@ class AdminRegisterForm(UserCreationForm):
 
     def clean_security_code(self):
         code = self.cleaned_data.get('security_code')
-        # Ensure you added ADMIN_SIGNUP_PASSCODE in settings.py
         if code != getattr(settings, 'ADMIN_SIGNUP_PASSCODE', 'COFFEE_MASTER_2025'):
             raise forms.ValidationError("Invalid Security Passcode.")
         return code
