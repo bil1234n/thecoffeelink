@@ -11,38 +11,31 @@ from market.models import Product
 import random  
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from chat.models import ChatRoom, Message # Ensure these are imported
+from chat.models import ChatRoom, Message 
 
 User = get_user_model()
 
 def marketing_contact(request):
     if request.method == 'POST':
-        # 1. Get Data from Form
         name = request.POST.get('name')
         email = request.POST.get('Email')
         phone = request.POST.get('Phone-Number')
         country = request.POST.get('Category-2')
         body = request.POST.get('field')
 
-        # 2. Find a RANDOM Admin to receive the message
-        # Filter for users with role 'admin' OR superusers
         admins = list(User.objects.filter(Q(role='admin') | Q(is_superuser=True), is_active=True))
 
         if not admins:
             messages.error(request, "System Error: No support agents available.")
             return redirect('contact')
 
-        # Pick one random admin
         target_admin = random.choice(admins)
 
-        # 3. Create/Get the "Website_Guest" user (The Sender)
-        # This user acts as the proxy for all public visitors
         guest_user, created = User.objects.get_or_create(username="Website_Guest")
         if created:
             guest_user.set_unusable_password()
             guest_user.save()
 
-        # 4. Get or Create Chat Room between Guest and the Random Admin
         room = ChatRoom.objects.filter(
             (Q(participant_1=guest_user) & Q(participant_2=target_admin)) |
             (Q(participant_1=target_admin) & Q(participant_2=guest_user))
@@ -51,7 +44,6 @@ def marketing_contact(request):
         if not room:
             room = ChatRoom.objects.create(participant_1=guest_user, participant_2=target_admin)
 
-        # 5. Create the Message Content
         full_message = (
             f"📢 **NEW CONTACT INQUIRY** <br>"
             f"👤 Name: {name} <br>"
@@ -62,13 +54,10 @@ def marketing_contact(request):
             f"{body}"
         )
 
-        # 6. Save the Message to Database
         Message.objects.create(room=room, sender=guest_user, content=full_message)
         
-        # Update room timestamp so it floats to top
         room.save()
 
-        # 7. Success Message
         messages.success(request, f"Thank you, {name}! Your message has been sent to our support team.")
         return redirect('contact')
 
@@ -93,7 +82,6 @@ def marketing_shop(request):
     
     return render(request, 'marketing/shop.html', {'products': products})
 
-# --- PUBLIC VIEWS ---
 def home(request):
     total_products = Product.objects.filter(is_active=True).count()
     return render(request, 'core/home.html', {'total_products': total_products})
@@ -110,10 +98,6 @@ def login_redirect_view(request):
     else:
         return redirect('home')
 
-# ==========================================
-# ADMIN DASHBOARD & ANALYTICS
-# ==========================================
-
 @login_required
 def admin_dashboard(request):
     if not request.user.is_staff: return redirect('home')
@@ -122,7 +106,6 @@ def admin_dashboard(request):
     total_products = Product.objects.count()
     total_revenue = sum(o.total_price for o in Order.objects.filter(status='Paid'))
 
-    # Analytics: Users by Role
     role_data = list(User.objects.values('role').annotate(count=Count('role')))
     labels = [item['role'].capitalize() for item in role_data]
     values = [item['count'] for item in role_data]
@@ -168,7 +151,6 @@ def admin_product_analytics(request):
     if not request.user.is_staff: return redirect('home')
     
     products = Product.objects.all()
-    # Analytics: Products by Category
     cat_data = list(Product.objects.values('category').annotate(count=Count('category')))
     labels = [x['category'] for x in cat_data]
     values = [x['count'] for x in cat_data]
@@ -184,7 +166,6 @@ def admin_order_analytics(request):
     if not request.user.is_staff: return redirect('home')
     
     orders = Order.objects.all().order_by('-created_at')
-    # Analytics: Orders by Status
     status_data = list(Order.objects.values('status').annotate(count=Count('status')))
     labels = [x['status'] for x in status_data]
     values = [x['count'] for x in status_data]
@@ -201,14 +182,11 @@ def mark_notification_read(request, notif_id):
     notif = get_object_or_404(Notification, id=notif_id, recipient=request.user)
     notif.is_read = True
     notif.save()
-    # Redirect to the link (e.g., the order or chat)
     return redirect(notif.link if notif.link else 'home')
 
 @login_required
 def all_notifications(request):
-    # Show all history
     all_notifs = Notification.objects.filter(recipient=request.user).order_by('-created_at')
-    # Mark all as read when visiting this page (optional strategy)
     return render(request, 'core/notifications.html', {'all_notifs': all_notifs})
 
 @login_required
