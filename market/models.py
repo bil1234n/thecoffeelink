@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from cloudinary.models import CloudinaryField  # <--- Import this
+from cloudinary.models import CloudinaryField  
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
@@ -15,14 +15,11 @@ class Product(models.Model):
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='Green')
     price = models.DecimalField(max_digits=10, decimal_places=2)
     
-    # CHANGED: Use CloudinaryField instead of ImageField
-    # 'folder' organizes images in your Cloudinary dashboard
     image = CloudinaryField('image', folder='products', blank=True, null=True)
     
     description = models.TextField()
     
-    # Soft Delete & Active Status
-    is_active = models.BooleanField(default=True) # Seller sets this false to "remove"
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -60,12 +57,10 @@ class SellerProfile(models.Model):
     def __str__(self):
         return f"Profile: {self.user.username}"
 
-# Hook to auto-create this profile when a Seller is created
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_seller_profile(sender, instance, created, **kwargs):
-    # Only create profile if the user role is 'seller'
     if created and getattr(instance, 'role', '') == 'seller':
         SellerProfile.objects.create(user=instance)
