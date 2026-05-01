@@ -3,9 +3,7 @@
 
 {% block content %}
 
-<!-- Custom Styles for Landing Page -->
 <style>
-    /* Floating Logo Animation */
     h1{
         font-size: 2.5rem;
     }
@@ -22,7 +20,6 @@
         50% { transform: translateY(-10px); }
         100% { transform: translateY(0px); }
     }
-    /* Feature Cards */
     .feature-card {
         border: none;
         border-radius: 15px;
@@ -41,7 +38,6 @@
         box-shadow: 0 15px 30px rgba(0,0,0,0.1);
     }
 
-    /* Icon Circles */
     .icon-circle {
         width: 70px;
         height: 70px;
@@ -58,12 +54,10 @@
         transform: scale(1.1) rotate(5deg);
     }
 
-    /* Specific Colors */
     .icon-ai { background-color: #e3f2fd; color: #1976d2; }
     .icon-market { background-color: #e8f5e9; color: #2e7d32; }
     .icon-live { background-color: #fce4ec; color: #c2185b; }
 
-    /* Decorative Circle in Hero */
     .hero-circle {
         position: absolute;
         width: 300px;
@@ -77,18 +71,15 @@
 
 <div class="container pb-5">
     
-    <!-- 1. HERO SECTION -->
     <div class="hero-banner text-center">
-        <!-- Logo on Top -->
         <img src="{% static 'img/logo_1.png' %}" alt="CoffeeCore Logo" class="hero-logo">
         <h1 class="fw-bold mb-3">Global Coffee Export & Import</h1>
     </div>
 
 
-    <!-- 2. FEATURES GRID -->
     <div class="row g-4 mt-2">
         
-        <!-- AI Agent Card -->
+        <!---- AI Agent Card -->
         <div class="col-md-4">
             <div class="feature-card">
                 <div class="icon-circle icon-ai">
@@ -104,7 +95,6 @@
             </div>
         </div>
 
-        <!-- Marketplace Card (Main) -->
         <div class="col-md-4">
             <div class="feature-card border border-warning border-2">
                 <div class="icon-circle icon-market">
@@ -120,7 +110,6 @@
             </div>
         </div>
 
-        <!-- Live Stream Card -->
         <div class="col-md-4">
             <div class="feature-card">
                 <div class="icon-circle icon-live">
@@ -137,8 +126,6 @@
         </div>
 
     </div>
-
-    <!-- 3. STATS STRIP (Professional Touch) -->
     <div class="row mt-5 text-center">
         <div class="col-md-4">
             <h2 class="fw-bold text-success">{{ total_products|default:"0" }}+</h2>
