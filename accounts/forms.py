@@ -3,7 +3,6 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.conf import settings
 from .models import User, VerificationDoc
 
-# --- 1. BUYER FORM ---
 class BuyerRegisterForm(UserCreationForm):
     class Meta:
         model = User
@@ -17,7 +16,6 @@ class BuyerRegisterForm(UserCreationForm):
             user.save()
         return user
 
-# --- 2. SELLER FORM (Updated fields) ---
 class SellerRegisterForm(UserCreationForm):
     business_license = forms.FileField(required=True, help_text="Upload valid Import/Export License")
     id_card = forms.FileField(required=True, help_text="Upload National ID Card")
@@ -39,7 +37,6 @@ class SellerRegisterForm(UserCreationForm):
             )
         return user
 
-# --- 3. ADMIN FORM ---
 class AdminRegisterForm(UserCreationForm):
     security_code = forms.CharField(widget=forms.PasswordInput, help_text="Enter Master Passcode")
 
@@ -63,7 +60,6 @@ class AdminRegisterForm(UserCreationForm):
             user.save()
         return user
 
-# --- LOGIN FORM ---
 class RoleBasedLoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         self.required_role = kwargs.pop('role', None)
