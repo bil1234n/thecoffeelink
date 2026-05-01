@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from cloudinary.models import CloudinaryField  # <--- Import this
+from cloudinary.models import CloudinaryField  
 
 class User(AbstractUser):
     BUYER = 'buyer'
@@ -22,7 +22,6 @@ class User(AbstractUser):
 class VerificationDoc(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='verification_doc')
     
-    # Use CloudinaryField with resource_type='auto' to allow PDFs and Images
     business_license = CloudinaryField(
         'business_license', 
         resource_type='auto', 
