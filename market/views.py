@@ -7,11 +7,10 @@ import json
 
 from django.utils import timezone
 from django.db.models import Sum, Q, Value, DecimalField
-from django.db.models.functions import Coalesce # <--- Important Import
+from django.db.models.functions import Coalesce 
 from .models import SellerProfile, Product, Order
 from accounts.models import User
 
-# --- 1. PRODUCT LIST (Marketplace) ---
 def product_list(request):
     products = Product.objects.filter(
         is_active=True, 
@@ -19,18 +18,15 @@ def product_list(request):
     ).order_by('-created_at')
     return render(request, 'market/list.html', {'products': products})
 
-# --- 2. NEW: PRODUCT DETAIL VIEW ---
 def product_detail(request, product_id):
     """Shows full details and allows ordering"""
     product = get_object_or_404(Product, id=product_id)
     return render(request, 'market/detail.html', {'product': product})
 
-# --- 3. UPDATED: CREATE ORDER (Handles Quantity) ---
 @login_required
 def create_order(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     
-    # Validation
     if not product.seller.is_verified:
         messages.error(request, "Seller not verified.")
         return redirect('product_list')
@@ -40,24 +36,21 @@ def create_order(request, product_id):
         return redirect('product_detail', product_id=product.id)
 
     if request.method == 'POST':
-        # Get quantity from the form (Default to 1 kg if missing)
         qty = int(request.POST.get('quantity', 1))
         
         if qty < 1:
             messages.error(request, "Quantity must be at least 1kg.")
             return redirect('product_detail', product_id=product.id)
 
-        # Create Order
         order = Order.objects.create(
             buyer=request.user, 
             product=product,
-            quantity=qty,               # Save quantity
-            total_price=product.price * qty, # Calculate Total
+            quantity=qty,             
+            total_price=product.price * qty, 
             status='Pending'
         )
         return redirect('payment_page', order_id=order.id)
     
-    # If someone tries to GET this URL directly, send them to detail page
     return redirect('product_detail', product_id=product.id)
 
 @login_required
@@ -76,27 +69,20 @@ def add_product(request):
         return redirect('seller_products')
     return redirect('home')
 
-# ==========================================
-# 2. SELLER DASHBOARD VIEWS
-# ==========================================
-
 @login_required
 def seller_dashboard(request):
     if request.user.role != 'seller': return redirect('home')
 
-    # Alert if not verified
     if not request.user.is_verified:
         messages.warning(request, "Your account is NOT verified. You cannot list products until Admin approval.")
 
     my_products = Product.objects.filter(seller=request.user, is_active=True)
     my_orders = Order.objects.filter(product__seller=request.user)
     
-    # --- FIX IS HERE ---
-    # We now calculate revenue for Paid, Shipped, AND Delivered orders
     valid_statuses = ['Paid', 'Shipped', 'Delivered']
     
     revenue = my_orders.filter(status__in=valid_statuses).aggregate(Sum('total_price'))['total_price__sum'] or 0
-    # -------------------
+
     
     status_data = list(my_orders.values('status').annotate(count=Count('status')))
     labels = [x['status'] for x in status_data]
@@ -115,8 +101,6 @@ def seller_dashboard(request):
 def seller_products(request):
     if request.user.role != 'seller': return redirect('home')
 
-    # --- SECURITY CHECK ---
-    # If seller is not verified, they cannot add products
     if request.method == 'POST':
         if not request.user.is_verified:
             messages.error(request, "Action Failed: Your account is pending verification.")
@@ -160,10 +144,9 @@ def seller_orders(request):
         o_id = request.POST.get('order_id')
         action = request.POST.get('action')
         order = get_object_or_404(Order, id=o_id, product__seller=request.user)
-        
-        # --- Handle Status Actions ---
+
         if action == 'accept':
-            order.status = 'Accepted' # Or 'Paid' if you want to skip payment logic
+            order.status = 'Accepted'
             messages.success(request, "Order Accepted.")
             
         elif action == 'shipped':
@@ -179,7 +162,7 @@ def seller_orders(request):
             messages.warning(request, "Order Declined.")
 
         elif action == 'pending':
-            order.status = 'Pending' # Reset status
+            order.status = 'Pending' 
             messages.info(request, "Order status reset to Pending.")
         
         order.save()
@@ -188,7 +171,6 @@ def seller_orders(request):
     orders = Order.objects.filter(product__seller=request.user).order_by('-created_at')
     return render(request, 'seller_panel/orders.html', {'orders': orders})
 
-# --- BUYER ORDERS ---
 @login_required
 def buyer_orders(request):
     """View for buyers to see their purchase history"""
@@ -200,10 +182,8 @@ def buyer_orders(request):
 def business_profile(request):
     if request.user.role != 'seller': return redirect('home')
 
-    # 1. Get or Create Profile
     profile, created = SellerProfile.objects.get_or_create(user=request.user)
 
-    # 2. Handle Form Post (Updating Roles)
     if request.method == 'POST':
         profile.company_name = request.POST.get('company_name', '')
         profile.is_farmer = 'is_farmer' in request.POST
@@ -214,24 +194,18 @@ def business_profile(request):
         messages.success(request, "Business Profile Updated!")
         return redirect('business_profile')
 
-    # 3. Revenue Calculations
     now = timezone.now()
     valid_status = ['Paid', 'Shipped', 'Delivered']
     
-    # Get all successful sales for THIS seller
     all_sales = Order.objects.filter(product__seller=request.user, status__in=valid_status)
 
     rev_today = all_sales.filter(created_at__date=now.date()).aggregate(Sum('total_price'))['total_price__sum'] or 0
     rev_month = all_sales.filter(created_at__month=now.month, created_at__year=now.year).aggregate(Sum('total_price'))['total_price__sum'] or 0
     rev_year = all_sales.filter(created_at__year=now.year).aggregate(Sum('total_price'))['total_price__sum'] or 0
     
-    # 4. Inventory Stats
     total_products = Product.objects.filter(seller=request.user, is_active=True).count()
     total_orders = all_sales.count()
 
-    # 5. MARKET RANKING ALGORITHM (Corrected)
-    # We annotate EVERY seller with their total revenue. 
-    # Coalesce ensures that if they have no sales, it counts as 0 instead of None.
     
     sellers_ranked = User.objects.filter(role='seller').annotate(
         total_revenue=Coalesce(
@@ -241,19 +215,16 @@ def business_profile(request):
             Value(0), 
             output_field=DecimalField()
         )
-    ).order_by('-total_revenue') # Sort Highest to Lowest
+    ).order_by('-total_revenue')
 
-    # Find my position in the list
     my_rank = 0
     total_sellers = sellers_ranked.count()
     
-    # Iterate to find the current user's index (1-based rank)
     for rank, seller in enumerate(sellers_ranked, start=1):
         if seller.id == request.user.id:
             my_rank = rank
             break
 
-    # Context
     context = {
         'profile': profile,
         'rev_today': rev_today,
@@ -273,7 +244,6 @@ def public_seller_profile(request, seller_id):
     seller = get_object_or_404(User, id=seller_id)
     profile, created = SellerProfile.objects.get_or_create(user=seller)
     
-    # Calculate Public Stats
     valid_status = ['Paid', 'Shipped', 'Delivered']
     successful_orders = Order.objects.filter(product__seller=seller, status__in=valid_status).count()
     active_products = Product.objects.filter(seller=seller, is_active=True).count()
