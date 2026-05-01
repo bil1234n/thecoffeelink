@@ -10,7 +10,6 @@ from django.contrib.auth.views import PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 
-# --- HELPER FOR LOGIN ---
 def role_login(request, role, template_name, success_url):
     if request.method == 'POST':
         form = RoleBasedLoginForm(request, data=request.POST, role=role)
@@ -22,7 +21,6 @@ def role_login(request, role, template_name, success_url):
         form = RoleBasedLoginForm(role=role)
     return render(request, template_name, {'form': form, 'role': role})
 
-# --- ADMIN VIEWS ---
 def admin_register(request):
     if request.method == 'POST':
         form = AdminRegisterForm(request.POST)
@@ -37,7 +35,6 @@ def admin_register(request):
 def admin_login(request):
     return role_login(request, User.ADMIN, 'accounts/admin/login.html', 'admin_dashboard')
 
-# --- SELLER VIEWS ---
 def seller_register(request):
     if request.method == 'POST':
         form = SellerRegisterForm(request.POST, request.FILES)
@@ -53,7 +50,6 @@ def seller_register(request):
 def seller_login(request):
     return role_login(request, User.SELLER, 'accounts/seller/login.html', 'seller_dashboard')
 
-# --- BUYER VIEWS ---
 def buyer_register(request):
     if request.method == 'POST':
         form = BuyerRegisterForm(request.POST)
@@ -94,5 +90,4 @@ class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Pass user role/data if needed for the sidebar
         return context
